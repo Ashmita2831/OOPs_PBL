@@ -1,0 +1,227 @@
+#include <iostream>
+using namespace std;
+
+// Base Class: Product
+class Product {
+protected:
+    int productID;
+    string name;
+    double price;
+    int quantity;
+
+public:
+    // Constructor
+    Product() {}
+    Product(int id, string n, double p, int q) {
+        productID = id;
+        name = n;
+        price = p;
+        quantity = q;
+    }
+
+    // Encapsulation - Getters and Setters
+    int getProductID() { return productID; }
+    string getName() { return name; }
+    double getPrice() { return price; }
+    int getQuantity() { return quantity; }
+
+    void setQuantity(int q) { quantity = q; }
+
+    // Abstraction - Show details
+    virtual void display() {
+        cout << "\nProduct ID: " << productID;
+        cout << "\nName: " << name;
+        cout << "\nPrice: Rs." << price;
+        cout << "\nQuantity: " << quantity;
+    }
+
+    // Polymorphism - Buy a product
+    virtual double buy(int qty) {
+        if (qty <= quantity) {
+            quantity -= qty;
+            double total = qty * price;
+            cout << "\nYou bought " << qty << " " << name << "(s) for Rs." << total << endl;
+            return total;
+        } else {
+            cout << "\nInsufficient stock!" << endl;
+            return 0;
+        }
+    }
+
+    virtual ~Product() {}
+};
+
+// Derived Classes (Inheritance)
+class Electronics : public Product {
+    int warrantyYears;
+public:
+    Electronics(int id, string n, double p, int q, int w)
+        : Product(id, n, p, q), warrantyYears(w) {}
+
+    void display() override {
+        cout << "\n[Electronics]";
+        Product::display();
+        cout << "\nWarranty: " << warrantyYears << " year(s)" << endl;
+    }
+};
+
+class Clothing : public Product {
+    string size;
+public:
+    Clothing(int id, string n, double p, int q, string s)
+        : Product(id, n, p, q), size(s) {}
+
+    void display() override {
+        cout << "\n[Clothing]";
+        Product::display();
+        cout << "\nSize: " << size << endl;
+    }
+};
+
+// Class: OnlineShop (Aggregation)
+class OnlineShop {
+    Product* products[50];
+    int count;
+    double totalRevenue;
+
+public:
+    OnlineShop() {
+        count = 0;
+        totalRevenue = 0;
+    }
+
+    void addProduct(Product* p) {
+        if (count < 50) {
+            products[count++] = p;
+            cout << "Product added successfully!\n";
+        } else {
+            cout << "Shop storage full!\n";
+        }
+    }
+
+    void showAllProducts() {
+        if (count == 0) {
+            cout << "No products available!\n";
+            return;
+        }
+        cout << "\n======= Available Products =======\n";
+        for (int i = 0; i < count; i++) {
+            products[i]->display();
+            cout << "-----------------------------\n";
+        }
+    }
+
+    void searchProduct(int id) {
+        for (int i = 0; i < count; i++) {
+            if (products[i]->getProductID() == id) {
+                cout << "\nProduct Found:\n";
+                products[i]->display();
+                return;
+            }
+        }
+        cout << "Product not found!\n";
+    }
+
+    void buyProduct(int id, int qty) {
+        for (int i = 0; i < count; i++) {
+            if (products[i]->getProductID() == id) {
+                double bill = products[i]->buy(qty);
+                totalRevenue += bill;
+                return;
+            }
+        }
+        cout << "Product not found!\n";
+    }
+
+    void showTotalRevenue() {
+        cout << "\nTotal Revenue: Rs." << totalRevenue << endl;
+    }
+
+    ~OnlineShop() {
+        for (int i = 0; i < count; i++)
+            delete products[i];
+    }
+};
+
+// Main Function (Menu Driven)
+int main() {
+    OnlineShop shop;
+    int choice;
+
+    do {
+        cout << "\n**** ONLINE SHOPPING MENU ****";
+        cout << "\n1. Add Product";
+        cout << "\n2. Display All Products";
+        cout << "\n3. Search Product by ID";
+        cout << "\n4. Buy Product";
+        cout << "\n5. Show Total Revenue";
+        cout << "\n6. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int id, qty, type;
+            string name;
+            double price;
+
+            cout << "\nEnter Product ID: ";
+            cin >> id;
+            cin.ignore();
+
+            cout << "Enter Product Name: ";
+            getline(cin, name);
+
+            cout << "Enter Price: ";
+            cin >> price;
+
+            cout << "Enter Quantity: ";
+            cin >> qty;
+
+            cout << "Select Type: 1. Electronics  2. Clothing: ";
+            cin >> type;
+
+            if (type == 1) {
+                int warranty;
+                cout << "Enter Warranty (in years): ";
+                cin >> warranty;
+                shop.addProduct(new Electronics(id, name, price, qty, warranty));
+            } else {
+                string size;
+                cout << "Enter Size (S/M/L/XL): ";
+                cin >> size;
+                shop.addProduct(new Clothing(id, name, price, qty, size));
+            }
+        }
+
+        else if (choice == 2)
+            shop.showAllProducts();
+
+        else if (choice == 3) {
+            int id;
+            cout << "Enter Product ID to search: ";
+            cin >> id;
+            shop.searchProduct(id);
+        }
+
+        else if (choice == 4) {
+            int id, qty;
+            cout << "Enter Product ID to buy: ";
+            cin >> id;
+            cout << "Enter Quantity: ";
+            cin >> qty;
+            shop.buyProduct(id, qty);
+        }
+
+        else if (choice == 5)
+            shop.showTotalRevenue();
+
+        else if (choice == 6)
+            cout << "\nExiting Online Shopping System...\n";
+
+        else
+            cout << "Invalid choice!\n";
+
+    } while (choice != 6);
+
+    return 0;
+}
